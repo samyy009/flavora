@@ -8,31 +8,39 @@ from datetime import datetime, timedelta
 import random
 from flask_mail import Mail, Message
 
+from flask_mail import Mail, Message
+from dotenv import load_dotenv
+
 # ── App Init ─────────────────────────────────────────────────
+load_dotenv() # Load .env file
+
 app = Flask(__name__)
-app.secret_key = "flavora_secret_2024_zx9k"
-CORS(app, supports_credentials=True, origins=["http://localhost:8080", "http://127.0.0.1:8080"])
+app.secret_key = os.environ.get("FLASK_SECRET", "flavora_secret_2024_zx9k")
+CORS(app, supports_credentials=True, origins=[
+    "http://localhost:8080", 
+    "http://127.0.0.1:8080",
+    os.environ.get("FRONTEND_URL", "*") # Support for your new domain
+])
 
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 # ── Mail Config (Real OTP) ───────────────────────────────────
-# IMPORTANT: Update these with your own SMTP credentials
-app.config['MAIL_SERVER']   = 'smtp.gmail.com'
-app.config['MAIL_PORT']     = 587
-app.config['MAIL_USE_TLS']  = True
-app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME', 'flavora.app@gmail.com')
-app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD', 'your-app-password')
+app.config['MAIL_SERVER']   = os.environ.get("MAIL_SERVER", "smtp.gmail.com")
+app.config['MAIL_PORT']     = int(os.environ.get("MAIL_PORT", 587))
+app.config['MAIL_USE_TLS']  = os.environ.get("MAIL_USE_TLS", "True") == "True"
+app.config['MAIL_USERNAME'] = os.environ.get("MAIL_USERNAME", "flavora.app@gmail.com")
+app.config['MAIL_PASSWORD'] = os.environ.get("MAIL_PASSWORD", "your-app-password")
 app.config['MAIL_DEFAULT_SENDER'] = app.config['MAIL_USERNAME']
 mail = Mail(app)
 
 # ── DB Config ────────────────────────────────────────────────
 DB_CONFIG = {
-    "host":     "localhost",
-    "user":     "root",
-    "password": "root@123",
-    "database": "flavora",
+    "host":     os.environ.get("DB_HOST", "localhost"),
+    "user":     os.environ.get("DB_USER", "root"),
+    "password": os.environ.get("DB_PASS", "root@123"),
+    "database": os.environ.get("DB_NAME", "flavora"),
 }
 
 def get_db():
