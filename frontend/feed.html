@@ -1,0 +1,171 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+    /* Flavora Auth Guard — redirect to login if not signed in */
+    (function() {
+      try {
+        var u = JSON.parse(localStorage.getItem('ek_user') || 'null');
+        if (!u) { localStorage.setItem('ek_return_to', location.pathname + location.search); location.replace('login.html'); }
+      } catch(e) { location.replace('login.html'); }
+    })();
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your Seasonal Feed — Flavora</title>
+  <meta name="description" content="Your personalized recipe feed from the chefs and storytellers you follow." />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .feed-layout {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 2.5rem;
+      padding: 2.5rem 0;
+      align-items: start;
+    }
+    .feed-header { margin-bottom: 2rem; }
+    .feed-header h1 { font-size: 2rem; margin-bottom: 4px; }
+    .feed-header p  { color: var(--text-muted); font-size: 0.9rem; }
+
+    /* Post Cards */
+    .feed-post {
+      margin-bottom: 2rem;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .feed-post-header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 1rem 1.2rem;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .feed-author-name { font-weight: 600; font-size: 0.9rem; }
+    .feed-author-sub  { font-size: 0.75rem; color: var(--text-muted); }
+    .feed-post-image  {
+      width: 100%; height: 340px;
+      position: relative;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .feed-image-emoji { font-size: 9rem; position: relative; z-index: 1; }
+    .feed-post-body   { padding: 1rem 1.2rem 0.5rem; }
+    .feed-caption     { font-size: 0.9rem; line-height: 1.6; color: var(--charcoal); }
+    .feed-post-actions {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      padding: 0.8rem 1.2rem;
+      border-top: 1px solid var(--border-light);
+    }
+    .feed-comments { border-top: 1px solid var(--border-light); }
+    .comments-list { padding: 0.5rem 1rem; }
+
+    /* Sidebar */
+    .sidebar { display: flex; flex-direction: column; gap: 1.5rem; position: sticky; top: 80px; }
+    .sidebar-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1.2rem;
+    }
+    .sidebar-card-title {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--text-muted);
+      margin-bottom: 1rem;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .sidebar-tastemaker {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 0; border-bottom: 1px solid var(--border-light);
+    }
+    .sidebar-tastemaker:last-child { border-bottom: none; }
+    .sidebar-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    @media (max-width: 900px) {
+      .feed-layout { grid-template-columns: 1fr; }
+      .sidebar { position: static; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Navigation ─────────────────────────────────────────────── -->
+<nav class="nav">
+  <div class="nav-logo">Flavora</div>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="feed.html" class="active">Feed</a></li>
+    <li><a href="upload.html">Upload</a></li>
+    <li><a href="tastemakers.html">Tastemakers</a></li>
+  </ul>
+  <div class="nav-right" id="nav-right-placeholder">
+    <div class="nav-search">
+      <span class="icon">🔍</span>
+      <input type="search" placeholder="Search seasonal flavors…" />
+    </div>
+    <div class="nav-avatar" onclick="location.href='profile.html'" title="My Profile">S</div>
+  </div>
+</nav>
+
+<main>
+  <div class="container">
+    <div class="feed-layout">
+
+      <!-- ── Feed Column ─────────────────────────────────────── -->
+      <div class="feed-main">
+        <div class="feed-header">
+          <h1>Your Seasonal Feed</h1>
+          <p>Inspiration curated from the chefs and storytellers you follow.</p>
+        </div>
+        <div id="feed-posts">
+          <div class="skeleton" style="height:500px;border-radius:20px;margin-bottom:2rem"></div>
+          <div class="skeleton" style="height:400px;border-radius:20px;margin-bottom:2rem"></div>
+        </div>
+      </div>
+
+      <!-- ── Sidebar ────────────────────────────────────────── -->
+      <aside class="sidebar">
+        <!-- Profile Card -->
+        <div class="sidebar-card" id="sidebar-profile">
+          <div class="skeleton" style="height:140px;border-radius:8px"></div>
+        </div>
+
+        <!-- Tastemakers -->
+        <div class="sidebar-card">
+          <div class="sidebar-card-title">
+            Taste Makers
+            <a href="tastemakers.html" style="font-size:0.75rem;color:var(--green)">View All</a>
+          </div>
+          <div id="sidebar-tastemakers"></div>
+        </div>
+
+        <!-- Trending Tags -->
+        <div class="sidebar-card">
+          <div class="sidebar-card-title">Trending Tags</div>
+          <div class="sidebar-tags" id="sidebar-tags"></div>
+        </div>
+      </aside>
+
+    </div>
+  </div>
+</main>
+
+<!-- ── Footer ────────────────────────────────────────────────── -->
+<footer class="footer">
+  <div class="container footer-inner">
+    <div>
+      <div class="footer-logo">Flavora</div>
+      <div class="footer-copy">© 2024 Flavora. Crafted for the Digital Epicurean.</div>
+    </div>
+    <ul class="footer-links">
+      <li><a href="#">About</a></li>
+      <li><a href="tastemakers.html">Community</a></li>
+      <li><a href="feed.html">Recipes</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script src="js/app.js"></script>
+<script src="js/feed.js"></script>
+</body>
+</html>
+
+
+

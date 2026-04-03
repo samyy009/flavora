@@ -1,0 +1,326 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tastemakers — Flavora</title>
+  <meta name="description" content="Meet the curators of flavor — the chefs and storytellers that transform simple recipes into premium experiences." />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    /* ── Hero ── */
+    .tm-hero {
+      min-height: 420px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: center;
+      padding: 3rem 0;
+    }
+    .tm-hero-left h1 { font-size: clamp(2.5rem,5vw,3.8rem); line-height: 1.1; }
+    .tm-hero-left h1 em { color: var(--green); font-style: italic; }
+    .tm-hero-left p { color: var(--text-muted); margin: 1rem 0 1.5rem; font-size: 0.95rem; line-height: 1.7; max-width: 420px; }
+    .tm-hero-right {
+      background: linear-gradient(135deg, #1C2A14, #3D6B1F);
+      border-radius: var(--radius-xl);
+      height: 320px; display: flex;
+      align-items: center; justify-content: center;
+      font-size: 8rem; position: relative; overflow: hidden;
+    }
+
+    /* ── Featured Cards ── */
+    .featured-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+    .featured-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      transition: box-shadow var(--transition), transform var(--transition);
+    }
+    .featured-card:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); }
+    .featured-card-img {
+      height: 100%; min-height: 160px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 5rem;
+    }
+    .featured-card-body { padding: 1.2rem; }
+    .featured-card-name { font-family: var(--font-serif); font-size: 1.1rem; margin-bottom: 2px; }
+    .featured-card-role { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px; }
+    .featured-card-bio  { font-size: 0.82rem; color: var(--charcoal-mid); font-style: italic; line-height: 1.5; margin-bottom: 10px; border-left: 2px solid var(--green); padding-left: 10px; }
+    .featured-card-stats { display: flex; gap: 1.2rem; }
+    .featured-stat { text-align: center; }
+    .featured-stat .n { font-weight: 700; font-size: 0.95rem; }
+    .featured-stat .l { font-size: 0.68rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); }
+    .featured-card-recipes { display: flex; gap: 6px; margin-top: 8px; }
+    .mini-recipe { width: 40px; height: 40px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+
+    /* ── Heritage Feature ── */
+    .heritage-section {
+      background: linear-gradient(135deg, var(--cream-dark) 0%, var(--cream) 100%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 2.5rem;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 2.5rem;
+      align-items: center;
+      margin: 3rem 0;
+    }
+    .heritage-badge { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--green); margin-bottom: 8px; }
+    .heritage-title { font-family: var(--font-serif); font-size: 2rem; line-height: 1.2; margin-bottom: 1rem; }
+    .heritage-desc  { font-size: 0.9rem; color: var(--charcoal-mid); line-height: 1.7; max-width: 520px; }
+    .heritage-points { list-style: none; margin: 1rem 0; }
+    .heritage-points li { display: flex; align-items: flex-start; gap: 10px; font-size: 0.85rem; color: var(--charcoal-mid); margin-bottom: 8px; }
+    .heritage-points li::before { content: '✦'; color: var(--green); flex-shrink: 0; margin-top: 2px; }
+    .heritage-avatar {
+      width: 160px; height: 200px;
+      border-radius: var(--radius-lg);
+      background: linear-gradient(135deg, #1C2A14, #2D5016);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 6rem; flex-shrink: 0;
+    }
+
+    /* ── Rising Stars ── */
+    .rising-stars-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.2rem;
+    }
+    .rising-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      transition: all var(--transition);
+      cursor: pointer;
+    }
+    .rising-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+    .rising-card-img   { height: 140px; display: flex; align-items: center; justify-content: center; font-size: 4rem; }
+    .rising-card-body  { padding: 10px 14px 14px; }
+    .rising-card-name  { font-weight: 600; font-size: 0.9rem; margin-bottom: 2px; }
+    .rising-card-role  { font-size: 0.72rem; color: var(--text-muted); margin-bottom: 6px; }
+    .rising-badge      { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--green); }
+
+    @media (max-width: 900px) {
+      .tm-hero      { grid-template-columns: 1fr; }
+      .featured-grid{ grid-template-columns: 1fr; }
+      .rising-stars-grid { grid-template-columns: repeat(2,1fr); }
+      .heritage-section  { grid-template-columns: 1fr; }
+      .heritage-avatar   { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Navigation ─────────────────────────────────────────────── -->
+<nav class="nav">
+  <div class="nav-logo">Flavora</div>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="feed.html">Feed</a></li>
+    <li><a href="upload.html">Upload</a></li>
+    <li><a href="tastemakers.html" class="active">Tastemakers</a></li>
+  </ul>
+  <div class="nav-right" id="nav-right-placeholder">
+    <div class="nav-search">
+      <span class="icon">🔍</span>
+      <input type="search" placeholder="Search on bio…" />
+    </div>
+    <div class="nav-avatar" onclick="location.href='profile.html'" title="My Profile">S</div>
+  </div>
+</nav>
+
+<main>
+  <div class="container">
+
+    <!-- ── Hero ──────────────────────────────────────────────── -->
+    <section class="tm-hero">
+      <div class="tm-hero-left">
+        <span class="badge badge-green" style="margin-bottom:1rem">✦ Tastemakers</span>
+        <h1>The Curators<br/>of <em>Flavor</em></h1>
+        <p>Beyond the ingredients lie the hands that harness the recipes that inspire, and the souls that transform simple everyday into precious experiences.</p>
+        <button class="btn btn-primary" onclick="document.getElementById('featured').scrollIntoView({behavior:'smooth'})">
+          Meet the Collective
+        </button>
+      </div>
+      <div class="tm-hero-right">👨‍🍳</div>
+    </section>
+
+    <!-- ── Featured Visionaries ──────────────────────────────── -->
+    <section class="section" id="featured">
+      <div class="section-header">
+        <h2 class="section-title">Featured Visionaries</h2>
+        <a href="#" class="see-all">View All Curators →</a>
+      </div>
+
+      <div class="featured-grid">
+        <!-- Clara Vigne -->
+        <div class="featured-card" onclick="location.href='profile.html?id=1'" style="cursor:pointer">
+          <div class="featured-card-img" style="background:linear-gradient(135deg,#3A1A2D,#8A3A6A)">👩</div>
+          <div class="featured-card-body">
+            <div class="featured-card-name">Clara Vigne</div>
+            <div class="featured-card-role">French Fusion</div>
+            <div class="featured-card-bio">"Cooking is about celebrating what the land gives us — with honesty and without shortcuts."</div>
+            <div class="featured-card-stats">
+              <div class="featured-stat"><div class="n">162</div><div class="l">Recipes</div></div>
+              <div class="featured-stat"><div class="n">18K</div><div class="l">Followers</div></div>
+            </div>
+            <div class="featured-card-recipes">
+              <div class="mini-recipe" style="background:linear-gradient(135deg,#3A1A1A,#8A3A2D)">🍝</div>
+              <div class="mini-recipe" style="background:linear-gradient(135deg,#2D3A1A,#5A8A2E)">🥗</div>
+              <div class="mini-recipe" style="background:linear-gradient(135deg,#1A2D35,#2D8A6E)">🐟</div>
+            </div>
+            <button class="btn btn-outline btn-sm follow-btn" style="margin-top:10px" onclick="event.stopPropagation();this.textContent=this.textContent==='Follow'?'Following':'Follow'">Follow</button>
+          </div>
+        </div>
+
+        <!-- Marcus Thorne -->
+        <div class="featured-card" onclick="location.href='profile.html?id=2'" style="cursor:pointer">
+          <div class="featured-card-img" style="background:linear-gradient(135deg,#1A2535,#2D4A6A)">👨</div>
+          <div class="featured-card-body">
+            <div class="featured-card-name">Marcus Thorne</div>
+            <div class="featured-card-role">Modern Nordic</div>
+            <div class="featured-card-bio">"The greatest discipline in cooking? Knowing when to stop — and when to add just a little more."</div>
+            <div class="featured-card-stats">
+              <div class="featured-stat"><div class="n">90</div><div class="l">Recipes</div></div>
+              <div class="featured-stat"><div class="n">32.8K</div><div class="l">Followers</div></div>
+            </div>
+            <div class="featured-card-recipes">
+              <div class="mini-recipe" style="background:linear-gradient(135deg,#1A1A3A,#4A4A8A)">🍣</div>
+              <div class="mini-recipe" style="background:linear-gradient(135deg,#1A2D1A,#3A6A3A)">🥩</div>
+              <div class="mini-recipe" style="background:linear-gradient(135deg,#3A2D1A,#8A6A2D)">🍮</div>
+            </div>
+            <button class="btn btn-outline btn-sm" style="margin-top:10px" onclick="event.stopPropagation();this.textContent=this.textContent==='Follow'?'Following':'Follow'">Follow</button>
+          </div>
+        </div>
+
+        <!-- Elena Rossi -->
+        <div class="featured-card" onclick="location.href='profile.html?id=3'" style="cursor:pointer">
+          <div class="featured-card-img" style="background:linear-gradient(135deg,#1A3A10,#3A8A20)">👩</div>
+          <div class="featured-card-body">
+            <div class="featured-card-name">Elena Rossi</div>
+            <div class="featured-card-role">Plant-Based Food</div>
+            <div class="featured-card-bio">"Cooking is a language that anyone can understand if spoken with love and local ingredients."</div>
+            <div class="featured-card-stats">
+              <div class="featured-stat"><div class="n">210</div><div class="l">Recipes</div></div>
+              <div class="featured-stat"><div class="n">52K</div><div class="l">Followers</div></div>
+            </div>
+            <div class="featured-card-recipes">
+              <div class="mini-recipe" style="background:linear-gradient(135deg,#1A3A1A,#4A8A4A)">🌿</div>
+              <div class="mini-recipe" style="background:linear-gradient(135deg,#2D3A1A,#6A8A2A)">🥗</div>
+              <div class="mini-recipe" style="background:linear-gradient(135deg,#3A1A10,#8A4A20)">🥘</div>
+            </div>
+            <button class="btn btn-outline btn-sm" style="margin-top:10px" onclick="event.stopPropagation();this.textContent=this.textContent==='Follow'?'Following':'Follow'">Follow</button>
+          </div>
+        </div>
+
+        <!-- Julien Blanc -->
+        <div class="featured-card" onclick="location.href='profile.html?id=4'" style="cursor:pointer">
+          <div class="featured-card-img" style="background:linear-gradient(135deg,#2A1A35,#5A3A8A)">👨</div>
+          <div class="featured-card-body">
+            <div class="featured-card-name">Julien Blanc</div>
+            <div class="featured-card-role">Pastry Artistry</div>
+            <div class="featured-card-bio">"Confection is the ultimate form of culinary collaboration — between art and precision."</div>
+            <div class="featured-card-stats">
+              <div class="featured-stat"><div class="n">78</div><div class="l">Recipes</div></div>
+              <div class="featured-stat"><div class="n">13.6K</div><div class="l">Followers</div></div>
+            </div>
+            <div class="featured-card-recipes">
+              <div class="mini-recipe" style="background:linear-gradient(135deg,#1A1210,#4A2820)">🍫</div>
+              <div class="mini-recipe" style="background:linear-gradient(135deg,#3A2A10,#8A6A20)">🥐</div>
+              <div class="mini-recipe" style="background:linear-gradient(135deg,#2A1A35,#6A4A8A)">🎂</div>
+            </div>
+            <button class="btn btn-outline btn-sm" style="margin-top:10px" onclick="event.stopPropagation();this.textContent=this.textContent==='Follow'?'Following':'Follow'">Follow</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Heritage Feature ──────────────────────────────────── -->
+    <div class="heritage-section">
+      <div>
+        <div class="heritage-badge">✦ Tastemaker Editorial</div>
+        <h2 class="heritage-title">The Heritage of Chef Aris Thorne</h2>
+        <p class="heritage-desc">At very the heart of it all, The story always starts and allows a meet humble sustainability. This series we explore how the settings on the support panel of Sustainable flavors for world renowned approach to full-timer cooking.</p>
+        <ul class="heritage-points">
+          <li>Yamazaki Chef — Shared Aikido Dish with the New Tradition</li>
+          <li>Michelin Trained — Mastered the field, Ensured the Spirit</li>
+        </ul>
+        <button class="btn btn-primary" onclick="location.href='recipe.html'">Read Full Portrait →</button>
+      </div>
+      <div class="heritage-avatar">👨‍🍳</div>
+    </div>
+
+    <!-- ── Rising Stars ────────────────────────────────────────── -->
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">Rising Stars</h2>
+        <a href="#" class="see-all">View All →</a>
+      </div>
+      <p style="color:var(--text-muted);font-size:0.88rem;margin-bottom:1.5rem">The next generation of culinary thinkers redefining what it means to cook with intention.</p>
+
+      <div class="rising-stars-grid">
+        <div class="rising-card" onclick="location.href='profile.html'">
+          <div class="rising-card-img" style="background:linear-gradient(135deg,#1A1A2D,#3A3A6A)">🧑</div>
+          <div class="rising-card-body">
+            <div class="rising-card-name">Mika Chen</div>
+            <div class="rising-card-role">Umami Alchemist</div>
+            <div class="rising-badge">New Voice</div>
+          </div>
+        </div>
+        <div class="rising-card" onclick="location.href='profile.html'">
+          <div class="rising-card-img" style="background:linear-gradient(135deg,#1A2D35,#2D6A7A)">👱</div>
+          <div class="rising-card-body">
+            <div class="rising-card-name">Oscar Hedges</div>
+            <div class="rising-card-role">Fermentation Expert</div>
+            <div class="rising-badge">Rising</div>
+          </div>
+        </div>
+        <div class="rising-card" onclick="location.href='profile.html'">
+          <div class="rising-card-img" style="background:linear-gradient(135deg,#2D1A10,#6A3A20)">👩</div>
+          <div class="rising-card-body">
+            <div class="rising-card-name">Tava Khan</div>
+            <div class="rising-card-role">Spice Narrativist</div>
+            <div class="rising-badge">Trending</div>
+          </div>
+        </div>
+        <div class="rising-card" onclick="location.href='profile.html'">
+          <div class="rising-card-img" style="background:linear-gradient(135deg,#1A2A10,#3A5A20)">🧔</div>
+          <div class="rising-card-body">
+            <div class="rising-card-name">Toby Cassini</div>
+            <div class="rising-card-role">Zero-Waste Chef</div>
+            <div class="rising-badge">Following</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<!-- ── Footer ────────────────────────────────────────────────── -->
+<footer class="footer">
+  <div class="container footer-inner">
+    <div>
+      <div class="footer-logo">Flavora</div>
+      <div class="footer-copy">© 2024 Flavora. Crafted for the Digital Epicurean.</div>
+    </div>
+    <ul class="footer-links">
+      <li><a href="#">About</a></li>
+      <li><a href="tastemakers.html">Community</a></li>
+      <li><a href="feed.html">Recipes</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script src="js/app.js"></script>
+</body>
+</html>
+
+

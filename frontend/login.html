@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In — Flavora</title>
+  <meta name="description" content="Sign in or create your Flavora account to share and discover exceptional recipes." />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    body { background: var(--charcoal); min-height: 100vh; display: flex; align-items: stretch; }
+
+    .auth-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      width: 100%; min-height: 100vh;
+    }
+
+    /* Left branding panel */
+    .auth-brand {
+      background: linear-gradient(160deg, #1C2A14 0%, #2D5016 50%, #3D7020 100%);
+      display: flex; flex-direction: column;
+      padding: 3rem; position: relative; overflow: hidden;
+    }
+    .auth-brand::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: url('images/braised_ribs.png') center/cover no-repeat;
+      opacity: 0.15;
+    }
+    .auth-brand-logo {
+      font-family: var(--font-serif); font-size: 1.3rem; color: var(--white);
+      font-weight: 600; position: relative; z-index: 1;
+    }
+    .auth-brand-content {
+      flex: 1; display: flex; flex-direction: column; justify-content: center;
+      position: relative; z-index: 1;
+    }
+    .auth-brand-content h1 {
+      color: var(--white); font-size: clamp(2rem,3vw,2.8rem); line-height: 1.15;
+      margin-bottom: 1rem;
+    }
+    .auth-brand-content h1 em { color: #A8CC78; }
+    .auth-brand-content p { color: rgba(255,255,255,0.7); font-size: 0.95rem; line-height: 1.7; max-width: 360px; }
+    .auth-features {
+      list-style: none; margin-top: 2rem; display: flex; flex-direction: column; gap: 12px;
+    }
+    .auth-features li {
+      display: flex; align-items: center; gap: 10px;
+      color: rgba(255,255,255,0.85); font-size: 0.88rem;
+    }
+    .auth-features li .feat-icon {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: rgba(255,255,255,0.12); display: flex; align-items: center; justify-content: center;
+      font-size: 0.95rem; flex-shrink: 0;
+    }
+    .auth-brand-footer {
+      position: relative; z-index: 1; font-size: 0.75rem; color: rgba(255,255,255,0.4);
+    }
+
+    /* Right form panel */
+    .auth-form-panel {
+      background: var(--cream);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 3rem 4rem;
+      overflow-y: auto;
+    }
+    .auth-form-wrap { width: 100%; max-width: 380px; }
+
+    /* Tab Toggle */
+    .auth-tabs {
+      display: flex; background: var(--cream-dark);
+      border-radius: 999px; padding: 4px; margin-bottom: 2rem;
+    }
+    .auth-tab {
+      flex: 1; padding: 9px; border-radius: 999px; border: none;
+      font-size: 0.85rem; font-weight: 600; cursor: pointer;
+      transition: all var(--transition); background: transparent; color: var(--text-muted);
+    }
+    .auth-tab.active { background: var(--white); color: var(--charcoal); box-shadow: var(--shadow-sm); }
+
+    /* Form */
+    .auth-form { display: none; }
+    .auth-form.active { display: block; animation: fadeIn 0.25s ease; }
+    .auth-title { font-family: var(--font-serif); font-size: 1.6rem; margin-bottom: 6px; }
+    .auth-sub   { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem; }
+
+    .input-group { position: relative; margin-bottom: 1rem; }
+    .input-icon {
+      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      font-size: 1rem; color: var(--text-muted); pointer-events: none;
+    }
+    .auth-input {
+      width: 100%; padding: 12px 14px 12px 42px;
+      border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+      background: var(--white); font-size: 0.9rem; color: var(--charcoal);
+      outline: none; transition: all var(--transition);
+    }
+    .auth-input:focus {
+      border-color: var(--green-mid); box-shadow: 0 0 0 3px rgba(45,80,22,0.1);
+    }
+    .auth-input::placeholder { color: var(--text-light); }
+
+    .auth-options {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 1.2rem; font-size: 0.82rem;
+    }
+    .remember-label { display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--charcoal-mid); }
+    .remember-label input { accent-color: var(--green); }
+    .forgot-link { color: var(--green); font-weight: 500; }
+    .forgot-link:hover { text-decoration: underline; }
+
+    .auth-submit {
+      width: 100%; padding: 13px; border-radius: 999px; border: none;
+      background: var(--green); color: var(--white);
+      font-size: 0.9rem; font-weight: 600; cursor: pointer;
+      transition: all var(--transition); margin-bottom: 1.2rem;
+    }
+    .auth-submit:hover { background: var(--green-mid); box-shadow: var(--shadow-md); transform: translateY(-1px); }
+    .auth-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .auth-divider {
+      display: flex; align-items: center; gap: 12px;
+      margin: 1rem 0; color: var(--text-light); font-size: 0.8rem;
+    }
+    .auth-divider::before, .auth-divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+
+    /* Demo accounts */
+    .demo-accounts { background: var(--cream-dark); border-radius: var(--radius-md); padding: 1rem; margin-top: 1.2rem; }
+    .demo-title { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+    .demo-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 6px 0; border-bottom: 1px solid var(--border-light);
+      font-size: 0.8rem;
+    }
+    .demo-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .demo-role { color: var(--text-muted); }
+    .demo-fill-btn {
+      font-size: 0.72rem; font-weight: 600; color: var(--green); background: none; border: none;
+      cursor: pointer; letter-spacing: 0.04em;
+    }
+    .demo-fill-btn:hover { text-decoration: underline; }
+
+    .auth-error {
+      background: #FEE8E8; border: 1px solid #F5C6C6; border-radius: var(--radius-sm);
+      padding: 10px 14px; font-size: 0.83rem; color: var(--red);
+      margin-bottom: 1rem; display: none;
+    }
+    .auth-error.show { display: block; animation: fadeIn 0.2s ease; }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    @media (max-width: 768px) {
+      .auth-layout { grid-template-columns: 1fr; }
+      .auth-brand   { display: none; }
+      .auth-form-panel { padding: 2rem 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="auth-layout">
+
+  <!-- ── Left Brand Panel ───────────────────────────────────── -->
+  <div class="auth-brand">
+    <div class="auth-brand-logo">Flavora</div>
+    <div class="auth-brand-content">
+      <h1>The place where <em>flavor</em> meets community.</h1>
+      <p>Join thousands of culinary storytellers sharing, discovering, and celebrating exceptional recipes from around the world.</p>
+      <ul class="auth-features">
+        <li><div class="feat-icon">❤️</div> Like and save recipes from top chefs</li>
+        <li><div class="feat-icon">💬</div> Comment and engage with the community</li>
+        <li><div class="feat-icon">📤</div> Upload and share your own recipes</li>
+        <li><div class="feat-icon">👨‍🍳</div> Follow your favourite Tastemakers</li>
+      </ul>
+    </div>
+    <div class="auth-brand-footer">© 2024 Flavora</div>
+  </div>
+
+  <!-- ── Right Form Panel ───────────────────────────────────── -->
+  <div class="auth-form-panel">
+    <div class="auth-form-wrap">
+
+      <!-- Tab Toggle -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Sign In</button>
+        <button class="auth-tab" id="tab-register" onclick="switchTab('register')">Create Account</button>
+      </div>
+
+      <!-- ── Login Form ───────────────────────────────────── -->
+      <div class="auth-form active" id="form-login">
+        <h2 class="auth-title">Welcome back</h2>
+        <p class="auth-sub">Sign in to your kitchen and pick up where you left off.</p>
+
+        <div class="auth-error" id="login-error"></div>
+
+        <div class="input-group">
+          <span class="input-icon">✉️</span>
+          <input class="auth-input" type="email" id="login-email" placeholder="Your email address" autocomplete="email" />
+        </div>
+        <div class="input-group">
+          <span class="input-icon">🔒</span>
+          <input class="auth-input" type="password" id="login-password" placeholder="Your password" autocomplete="current-password" />
+        </div>
+        <div class="auth-options">
+          <label class="remember-label">
+            <input type="checkbox" id="remember-me" checked /> Remember me
+          </label>
+          <a href="#" class="forgot-link" onclick="showResetFlow()">Forgot password?</a>
+        </div>
+        <button class="auth-submit" id="login-btn" onclick="doLogin()">Sign In</button>
+
+        <div class="auth-divider">Try a demo account</div>
+        <div class="demo-accounts">
+          <div class="demo-title">Demo Accounts</div>
+          <div class="demo-row">
+            <div>
+              <div style="font-weight:600">sameer@gmail.com</div>
+              <div class="demo-role">Home Cook · password: 123</div>
+            </div>
+            <button class="demo-fill-btn" onclick="fillDemo('sameer@gmail.com','123')">USE →</button>
+          </div>
+          <div class="demo-row">
+            <div>
+              <div style="font-weight:600">clara@flavora.com</div>
+              <div class="demo-role">Tastemaker · password: hashed_pw_1</div>
+            </div>
+            <button class="demo-fill-btn" onclick="fillDemo('clara@flavora.com','hashed_pw_1')">USE →</button>
+          </div>
+          <div class="demo-row">
+            <div>
+              <div style="font-weight:600">admin@flavora.com</div>
+              <div class="demo-role">Admin Panel · password: admin123</div>
+            </div>
+            <button class="demo-fill-btn" onclick="fillDemo('admin@flavora.com','admin123')">USE →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Register Form ────────────────────────────────── -->
+      <div class="auth-form" id="form-register">
+        <h2 class="auth-title">Join the kitchen</h2>
+        <p class="auth-sub">Create your account and start sharing your culinary story.</p>
+
+        <div class="auth-error" id="register-error"></div>
+
+        <div class="input-group">
+          <span class="input-icon">👤</span>
+          <input class="auth-input" type="text" id="reg-name" placeholder="Your full name" autocomplete="name" />
+        </div>
+        <div class="input-group">
+          <span class="input-icon">✉️</span>
+          <input class="auth-input" type="email" id="reg-email" placeholder="Email address" autocomplete="email" />
+        </div>
+        <div class="input-group">
+          <span class="input-icon">🔒</span>
+          <input class="auth-input" type="password" id="reg-password" placeholder="Create a password (min. 6 chars)" autocomplete="new-password" />
+        </div>
+        <div class="input-group">
+          <span class="input-icon">📝</span>
+          <input class="auth-input" type="text" id="reg-bio" placeholder="Short bio (optional)" />
+        </div>
+        <button class="auth-submit" id="register-btn" onclick="doRegister()">Create Account</button>
+
+        <p style="font-size:0.78rem;color:var(--text-muted);text-align:center;margin-top:1rem">
+          By creating an account you agree to our <a href="#" style="color:var(--green)">Terms</a> and <a href="#" style="color:var(--green)">Privacy Policy</a>.
+        </p>
+      </div>
+
+      <!-- ── Reset Password Flow ────────────────────────────── -->
+      <div class="auth-form" id="form-reset">
+        <h2 class="auth-title">Reset Password</h2>
+        <p class="auth-sub" id="reset-sub">Enter your email or phone to receive a reset code.</p>
+
+        <div class="auth-error" id="reset-error"></div>
+
+        <!-- Step 1: Request OTP -->
+        <div id="reset-step-1">
+          <div class="input-group">
+            <span class="input-icon">✉️</span>
+            <input class="auth-input" type="text" id="reset-target" placeholder="Email or Phone Number" />
+          </div>
+          <button class="auth-submit" id="request-otp-btn" onclick="requestOTP()">Send Reset Code</button>
+        </div>
+
+        <!-- Step 2: Verify & Reset -->
+        <div id="reset-step-2" style="display:none">
+          <div class="input-group">
+            <span class="input-icon">🔢</span>
+            <input class="auth-input" type="text" id="reset-otp" placeholder="6-digit code" maxlength="6" />
+          </div>
+          <div class="input-group">
+            <span class="input-icon">🔒</span>
+            <input class="auth-input" type="password" id="reset-new-password" placeholder="New password (min. 6 chars)" />
+          </div>
+          <button class="auth-submit" id="reset-password-btn" onclick="resetPassword()">Update Password</button>
+        </div>
+
+        <div style="text-align:center">
+          <a href="#" style="font-size:0.8rem;color:var(--green);font-weight:500" onclick="switchTab('login')">Return to Sign In</a>
+        </div>
+      </div>
+
+      <!-- Back to site -->
+      <div style="text-align:center;margin-top:1.5rem">
+        <a href="index.html" style="font-size:0.8rem;color:var(--text-muted)">← Back to Flavora</a>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'http://127.0.0.1:5000/api';
+
+// If already logged in, skip the login page
+(function() {
+  try {
+    var u = JSON.parse(localStorage.getItem('ek_user') || 'null');
+    if (u) {
+      if (u.role === 'admin') location.replace('admin.html');
+      else location.replace('index.html');
+    }
+  } catch(e) {}
+})();
+
+// Demo admin user (loaded from localStorage in real app)
+const DEMO_USERS = [
+  { id: 5, name: 'Sameer',        email: 'sameer@gmail.com',   password: '123',         role: 'user',       bio: 'Home cook & food explorer.' },
+  { id: 1, name: 'Clara Vigne',   email: 'clara@flavora.com',  password: 'hashed_pw_1', role: 'tastemaker', bio: 'French Fusion chef.' },
+  { id: 2, name: 'Marcus Thorne', email: 'marcus@flavora.com', password: 'hashed_pw_2', role: 'tastemaker', bio: 'Modern Nordic.' },
+  { id: 3, name: 'Elena Rossi',   email: 'elena@flavora.com',  password: 'hashed_pw_3', role: 'tastemaker', bio: 'Plant-Based Food.' },
+  { id: 4, name: 'Julien Blanc',  email: 'julien@flavora.com', password: 'hashed_pw_4', role: 'tastemaker', bio: 'Pastry Artist.' },
+  { id: 6, name: 'Admin',         email: 'admin@flavora.com',  password: 'admin123',    role: 'admin',      bio: 'Platform administrator.' }
+];
+
+function switchTab(tab) {
+  document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+  document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+  document.getElementById('form-login').classList.toggle('active', tab === 'login');
+  document.getElementById('form-register').classList.toggle('active', tab === 'register');
+  document.getElementById('form-reset').classList.toggle('active', tab === 'reset');
+}
+
+function showResetFlow() {
+  switchTab('reset');
+  document.getElementById('reset-step-1').style.display = 'block';
+  document.getElementById('reset-step-2').style.display = 'none';
+  document.getElementById('reset-sub').textContent = 'Enter your email or phone to receive a reset code.';
+}
+
+function fillDemo(email, pass) {
+  document.getElementById('login-email').value = email;
+  document.getElementById('login-password').value = pass;
+  document.getElementById('login-error').classList.remove('show');
+}
+
+function showError(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg; el.classList.add('show');
+}
+
+async function doLogin() {
+  const email    = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const btn      = document.getElementById('login-btn');
+  const errEl    = document.getElementById('login-error');
+  errEl.classList.remove('show');
+  if (!email || !password) { showError('login-error', 'Please fill in all fields.'); return; }
+
+  btn.disabled = true; btn.textContent = 'Signing in…';
+
+  // Try backend first
+  let user = null;
+  try {
+    const res = await fetch(`${API}/auth/login`, {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    if (res.ok) { user = await res.json(); }
+  } catch (_) {}
+
+  // Fallback: demo user match
+  if (!user) {
+    user = DEMO_USERS.find(u => u.email === email && u.password === password);
+    if (!user) {
+      btn.disabled = false; btn.textContent = 'Sign In';
+      showError('login-error', 'Invalid email or password. Try a demo account below.');
+      return;
+    }
+  }
+
+  localStorage.setItem('ek_user', JSON.stringify(user));
+  btn.textContent = '✓ Welcome back, ' + user.name + '!';
+
+  setTimeout(() => {
+    if (user.role === 'admin') {
+      location.href = 'admin.html';
+    } else {
+      // Return to page that triggered login, or home
+      const returnTo = localStorage.getItem('ek_return_to');
+      localStorage.removeItem('ek_return_to');
+      location.href = (returnTo && returnTo !== '/login.html') ? returnTo : 'index.html';
+    }
+  }, 700);
+}
+
+async function doRegister() {
+  const name     = document.getElementById('reg-name').value.trim();
+  const email    = document.getElementById('reg-email').value.trim();
+  const password = document.getElementById('reg-password').value;
+  const bio      = document.getElementById('reg-bio').value.trim();
+  const btn      = document.getElementById('register-btn');
+  const errEl    = document.getElementById('register-error');
+  errEl.classList.remove('show');
+
+  if (!name || !email || !password) { showError('register-error', 'Name, email, and password are required.'); return; }
+  if (password.length < 6) { showError('register-error', 'Password must be at least 6 characters.'); return; }
+
+  btn.disabled = true; btn.textContent = 'Creating account…';
+
+  let user = null;
+  try {
+    const res = await fetch(`${API}/auth/register`, {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, password, bio })
+    });
+    if (res.ok) { user = await res.json(); }
+    else { const d = await res.json(); throw new Error(d.error || 'Registration failed'); }
+  } catch (err) {
+    // Offline fallback: create local user
+    user = { id: Date.now(), name, email, role: 'user', bio };
+  }
+
+  localStorage.setItem('ek_user', JSON.stringify(user));
+  btn.textContent = 'Account created! Redirecting…';
+  setTimeout(() => { location.href = 'index.html'; }, 800);
+}
+
+async function requestOTP() {
+  const target = document.getElementById('reset-target').value.trim();
+  const btn = document.getElementById('request-otp-btn');
+  const errEl = document.getElementById('reset-error');
+  errEl.classList.remove('show');
+
+  if (!target) { showError('reset-error', 'Please enter your email or phone.'); return; }
+  
+  btn.disabled = true; btn.textContent = 'Sending code…';
+  try {
+    const res = await fetch(`${API}/auth/forgot-password`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ target })
+    });
+    const d = await res.json();
+    if (res.ok) {
+      document.getElementById('reset-step-1').style.display = 'none';
+      document.getElementById('reset-step-2').style.display = 'block';
+      document.getElementById('reset-sub').textContent = 'Enter the 6-digit code sent to you.';
+      if (d.dev_otp) console.log("%c[DEV] OTP Code: " + d.dev_otp, "color: #ff00ff; font-weight: bold; font-size: 14px;");
+    } else {
+      showError('reset-error', d.error || 'Failed to send OTP.');
+      btn.disabled = false; btn.textContent = 'Send Reset Code';
+    }
+  } catch (err) {
+    showError('reset-error', 'Connection error. Check your backend.');
+    btn.disabled = false; btn.textContent = 'Send Reset Code';
+  }
+}
+
+async function resetPassword() {
+  const target = document.getElementById('reset-target').value.trim();
+  const otp = document.getElementById('reset-otp').value.trim();
+  const password = document.getElementById('reset-new-password').value;
+  const btn = document.getElementById('reset-password-btn');
+  const errEl = document.getElementById('reset-error');
+  errEl.classList.remove('show');
+
+  if (!otp || !password) { showError('reset-error', 'Please fill in all fields.'); return; }
+  if (password.length < 6) { showError('reset-error', 'Password must be at least 6 characters.'); return; }
+
+  btn.disabled = true; btn.textContent = 'Updating password…';
+  try {
+    const res = await fetch(`${API}/reset-password`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ target, otp, password })
+    });
+    const d = await res.json();
+    if (res.ok) {
+      btn.textContent = '✓ Password updated!';
+      setTimeout(() => switchTab('login'), 1500);
+    } else {
+      showError('reset-error', d.error || 'Failed to reset password.');
+      btn.disabled = false; btn.textContent = 'Update Password';
+    }
+  } catch (err) {
+    showError('reset-error', 'Connection error.');
+    btn.disabled = false; btn.textContent = 'Update Password';
+  }
+}
+
+// Enter key support
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    if (document.getElementById('form-login').classList.contains('active')) doLogin();
+    else doRegister();
+  }
+});
+</script>
+
+</body>
+</html>
+

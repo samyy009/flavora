@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+    /* Flavora Auth Guard — redirect to login if not signed in */
+    (function() {
+      try {
+        var u = JSON.parse(localStorage.getItem('ek_user') || 'null');
+        if (!u) { localStorage.setItem('ek_return_to', location.pathname + location.search); location.replace('login.html'); }
+      } catch(e) { location.replace('login.html'); }
+    })();
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flavora — Recipe Discovery & Community</title>
+  <meta name="description" content="Discover, share, and celebrate exceptional recipes. Join the community of culinary storytellers." />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    /* ── Hero ── */
+    .hero {
+      padding: 3.5rem 0 2rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: center;
+    }
+    .hero-badge { margin-bottom: 1rem; }
+    .hero-title { font-size: clamp(2.2rem,5vw,3.4rem); margin-bottom: 1rem; line-height: 1.1; }
+    .hero-desc  { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.6rem; line-height: 1.7; max-width: 420px; }
+    .hero-image {
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      aspect-ratio: 4/3;
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #1A2D10 0%, #2D5016 60%, #5A8A2E 100%);
+      font-size: 10rem;
+      position: relative;
+    }
+    .hero-image::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.3), transparent);
+      border-radius: var(--radius-xl);
+    }
+
+    /* ── Diet Categories ── */
+    .diet-categories { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .diet-cat {
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      padding: 1.2rem 1.4rem; border-radius: var(--radius-md);
+      background: var(--white); border: 1.5px solid var(--border);
+      min-width: 90px; cursor: pointer;
+      transition: all var(--transition); font-size: 0.8rem; font-weight: 500;
+      color: var(--charcoal-mid);
+    }
+    .diet-cat:hover { border-color: var(--green); background: var(--green-pale); color: var(--green); transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+    .diet-icon { font-size: 1.6rem; }
+
+    /* ── Tastemakers ── */
+    .tastemakers-section { background: var(--cream-dark); border-radius: var(--radius-xl); padding: 2.5rem; }
+    .tastemakers-row { display: flex; gap: 2rem; flex-wrap: wrap; justify-content: center; margin-top: 1.5rem; }
+    .tastemaker-item { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
+    .tastemaker-avatar {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: var(--green); display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; border: 3px solid var(--white);
+      box-shadow: var(--shadow-sm);
+      transition: transform var(--transition), box-shadow var(--transition);
+    }
+    .tastemaker-item:hover .tastemaker-avatar { transform: scale(1.08); box-shadow: var(--shadow-md); }
+    .tastemaker-name { font-weight: 600; font-size: 0.85rem; text-align: center; }
+    .tastemaker-role { font-size: 0.75rem; color: var(--text-muted); text-align: center; }
+
+    @media (max-width: 768px) {
+      .hero { grid-template-columns: 1fr; gap: 2rem; }
+      .hero-image { height: 260px; font-size: 6rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Navigation ────────────────────────────────────────────── -->
+<nav class="nav">
+  <div class="nav-logo">Flavora</div>
+  <ul class="nav-links">
+    <li><a href="index.html" class="active">Home</a></li>
+    <li><a href="feed.html">Feed</a></li>
+    <li><a href="upload.html">Upload</a></li>
+    <li><a href="tastemakers.html">Tastemakers</a></li>
+  </ul>
+  <div class="nav-right" id="nav-right-placeholder">
+    <div class="nav-search">
+      <span class="icon">🔍</span>
+      <input type="search" placeholder="Search for flavors…" id="search-input" />
+    </div>
+    <div class="nav-avatar" onclick="location.href='profile.html'" title="My Profile">S</div>
+  </div>
+</nav>
+
+<!-- ── Main ─────────────────────────────────────────────────── -->
+<main>
+  <div class="container">
+
+    <!-- Hero -->
+    <section class="hero" id="flavora-hero">
+      <div class="hero-left">
+        <div class="hero-badge">
+          <span class="badge badge-green">✦ Flavora Selection</span>
+        </div>
+        <h1 class="hero-title">
+          Slow-Roasted Heirloom Carrots with Whipped Tahini.
+        </h1>
+        <p class="hero-desc">
+          Discover a masterclass in texture and seasonal simplicity. This month's feature explores the deep umami of root vegetables.
+        </p>
+        <button class="btn btn-primary" onclick="location.href='recipe.html?id=7'" id="view-hero-recipe">
+          View Recipe →
+        </button>
+      </div>
+      <div class="hero-right">
+        <div class="hero-image" style="background:none">
+          <img src="images/hero_carrots.png" alt="Roasted Carrots" style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius-xl)" />
+        </div>
+      </div>
+    </section>
+
+    <hr class="divider" />
+
+    <!-- Browse by Diet -->
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">Browse by Diet</h2>
+        <a href="feed.html" class="see-all">Explore All</a>
+      </div>
+      <div class="diet-categories" id="diet-categories"></div>
+    </section>
+
+    <hr class="divider" />
+
+    <!-- Trending -->
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">Trending This Week</h2>
+        <a href="feed.html" class="see-all">View All →</a>
+      </div>
+      <div class="grid-3" id="trending-grid">
+        <!-- Loaded by home.js -->
+        <div class="skeleton" style="height:280px;border-radius:14px"></div>
+        <div class="skeleton" style="height:280px;border-radius:14px"></div>
+        <div class="skeleton" style="height:280px;border-radius:14px"></div>
+      </div>
+    </section>
+
+    <hr class="divider" />
+
+    <!-- Tastemakers -->
+    <section class="section">
+      <div class="tastemakers-section">
+        <div style="text-align:center;margin-bottom:0.5rem">
+          <h2 style="font-family:var(--font-serif);font-size:1.6rem">Meet Our Tastemakers</h2>
+          <p style="color:var(--text-muted);font-size:0.9rem;margin-top:4px">The hands that harness the stories that inspire.</p>
+        </div>
+        <div class="tastemakers-row" id="tastemakers-row"></div>
+        <div style="text-align:center;margin-top:1.5rem">
+          <button class="btn btn-outline" onclick="location.href='tastemakers.html'">View All Tastemakers</button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<!-- ── Footer ────────────────────────────────────────────────── -->
+<footer class="footer">
+  <div class="container footer-inner">
+    <div>
+      <div class="footer-logo">Flavora</div>
+      <div class="footer-copy">© 2024 Flavora. Crafted for the Digital Epicurean.</div>
+    </div>
+    <ul class="footer-links">
+      <li><a href="#">About</a></li>
+      <li><a href="tastemakers.html">Community</a></li>
+      <li><a href="feed.html">Recipes</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script src="js/app.js"></script>
+<script src="js/home.js"></script>
+</body>
+</html>
+
+

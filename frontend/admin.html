@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard — Flavora</title>
+  <script>
+    /* Flavora Admin Guard — only admin role may enter */
+    (function() {
+      try {
+        var u = JSON.parse(localStorage.getItem('ek_user') || 'null');
+        if (!u) { location.replace('login.html'); return; }
+        if (u.role !== 'admin') { alert('Access denied. Admin only.'); location.replace('index.html'); }
+      } catch(e) { location.replace('login.html'); }
+    })();
+  </script>
+  <link rel="stylesheet" href="css/style.css" />
+
+  <style>
+    body { background: #0F1A0A; font-family: var(--font-sans); }
+
+    /* ── Admin Layout ── */
+    .admin-sidebar {
+      position: fixed; left: 0; top: 0; bottom: 0; width: 240px;
+      background: #0D1508;
+      border-right: 1px solid rgba(255,255,255,0.07);
+      display: flex; flex-direction: column;
+      padding: 1.5rem 0; z-index: 50;
+    }
+    .admin-logo {
+      font-family: var(--font-serif); font-size: 1rem; color: var(--cream);
+      padding: 0 1.5rem 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.07);
+      margin-bottom: 0.5rem;
+    }
+    .admin-logo span { display: block; font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--green-light); font-family: var(--font-sans); margin-top: 2px; }
+    .admin-nav { flex: 1; padding: 0.5rem 0; }
+    .admin-nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 1.5rem; font-size: 0.85rem; color: rgba(255,255,255,0.55);
+      cursor: pointer; transition: all var(--transition); border-left: 3px solid transparent;
+    }
+    .admin-nav-item:hover  { color: var(--cream); background: rgba(255,255,255,0.04); }
+    .admin-nav-item.active { color: var(--cream); background: rgba(90,138,46,0.15); border-left-color: var(--green-light); }
+    .admin-nav-item .nav-icon { font-size: 1.1rem; width: 20px; text-align: center; }
+    .admin-bottom { padding: 1rem 1.5rem; border-top: 1px solid rgba(255,255,255,0.07); }
+    .admin-user { display: flex; align-items: center; gap: 10px; }
+    .admin-user-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: var(--green); color: #fff; font-weight: 700; font-size: 13px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .admin-user-name { font-size: 0.82rem; color: var(--cream); font-weight: 600; }
+    .admin-user-role { font-size: 0.7rem; color: rgba(255,255,255,0.4); letter-spacing: 0.04em; text-transform: uppercase; }
+
+    /* ── Main Content ── */
+    .admin-main { margin-left: 240px; min-height: 100vh; }
+    .admin-topbar {
+      position: sticky; top: 0; z-index: 40;
+      background: rgba(15,26,10,0.95); backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 2rem;
+    }
+    .admin-topbar h1 { color: var(--cream); font-size: 1.2rem; font-weight: 600; }
+    .admin-topbar-actions { display: flex; gap: 10px; align-items: center; }
+    .admin-badge {
+      padding: 4px 12px; border-radius: 999px; font-size: 0.72rem;
+      font-weight: 600; letter-spacing: 0.04em;
+    }
+    .badge-live { background: rgba(90,138,46,0.2); color: var(--green-light); }
+
+    .admin-content { padding: 2rem; }
+
+    /* ── Stat Cards ── */
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(4,1fr); gap: 1.2rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: #141F0D;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--radius-md);
+      padding: 1.4rem;
+      position: relative; overflow: hidden;
+      transition: border-color var(--transition);
+    }
+    .stat-card:hover { border-color: rgba(90,138,46,0.3); }
+    .stat-card::before {
+      content: '';
+      position: absolute; top: -20px; right: -20px;
+      width: 80px; height: 80px; border-radius: 50%;
+      opacity: 0.06;
+    }
+    .stat-card.green::before  { background: #5A8A2E; }
+    .stat-card.blue::before   { background: #2E5A8A; }
+    .stat-card.red::before    { background: #8A2E2E; }
+    .stat-card.orange::before { background: #8A5A2E; }
+    .stat-icon { font-size: 1.5rem; margin-bottom: 0.8rem; }
+    .stat-val  {
+      font-size: 2.4rem; font-weight: 700; color: var(--cream);
+      font-family: var(--font-serif); line-height: 1;
+      margin-bottom: 4px;
+    }
+    .stat-label { font-size: 0.75rem; color: rgba(255,255,255,0.45); letter-spacing: 0.06em; text-transform: uppercase; }
+    .stat-change {
+      font-size: 0.72rem; font-weight: 600; margin-top: 6px;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .stat-change.up   { color: var(--green-light); }
+    .stat-change.down { color: #E07070; }
+
+    /* ── Tables ── */
+    .admin-section { margin-bottom: 2rem; }
+    .admin-section-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 1rem;
+    }
+    .admin-section-title { font-size: 0.8rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.5); }
+    .admin-section-link  { font-size: 0.78rem; color: var(--green-light); font-weight: 500; }
+
+    .admin-table-wrap {
+      background: #141F0D; border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--radius-md); overflow: hidden;
+    }
+    .admin-table { width: 100%; border-collapse: collapse; }
+    .admin-table th {
+      padding: 10px 16px; background: rgba(255,255,255,0.03);
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+      color: rgba(255,255,255,0.35); text-align: left;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .admin-table td {
+      padding: 12px 16px; font-size: 0.83rem; color: rgba(255,255,255,0.75);
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      vertical-align: middle;
+    }
+    .admin-table tr:last-child td { border-bottom: none; }
+    .admin-table tr:hover td { background: rgba(255,255,255,0.02); }
+    .user-cell { display: flex; align-items: center; gap: 10px; }
+    .user-mini-avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--green-mid); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; flex-shrink: 0;
+    }
+    .user-name-cell { font-weight: 600; color: var(--cream); font-size: 0.85rem; }
+    .user-email-cell { font-size: 0.75rem; color: rgba(255,255,255,0.4); }
+
+    .role-badge {
+      padding: 2px 10px; border-radius: 999px; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.04em;
+    }
+    .role-admin       { background: rgba(194,68,68,0.2);  color: #F08080; }
+    .role-tastemaker  { background: rgba(90,138,46,0.2);  color: var(--green-light); }
+    .role-user        { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.5); }
+
+    .recipe-img-mini {
+      width: 44px; height: 34px; border-radius: 6px;
+      object-fit: cover; flex-shrink: 0; background: rgba(255,255,255,0.1);
+      display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+    }
+
+    /* ── Two Column Grid ── */
+    .admin-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
+
+    /* ── Bar Chart ── */
+    .bar-chart { display: flex; flex-direction: column; gap: 10px; padding: 1rem; }
+    .bar-row { display: flex; align-items: center; gap: 12px; }
+    .bar-label { font-size: 0.78rem; color: rgba(255,255,255,0.55); width: 100px; flex-shrink: 0; }
+    .bar-track { flex: 1; background: rgba(255,255,255,0.06); border-radius: 999px; height: 8px; }
+    .bar-fill  { height: 8px; border-radius: 999px; background: linear-gradient(90deg, var(--green), var(--green-light)); transition: width 0.8s ease; }
+    .bar-count { font-size: 0.78rem; color: rgba(255,255,255,0.5); width: 40px; text-align: right; flex-shrink: 0; }
+
+    /* ── Action buttons ── */
+    .admin-action-btn {
+      padding: 5px 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.1);
+      background: transparent; color: rgba(255,255,255,0.55); font-size: 0.72rem;
+      cursor: pointer; transition: all var(--transition);
+    }
+    .admin-action-btn:hover { background: rgba(255,255,255,0.06); color: var(--cream); }
+    .admin-action-btn.danger:hover { background: rgba(194,68,68,0.15); color: #F08080; border-color: rgba(194,68,68,0.3); }
+
+    @media (max-width: 1100px) {
+      .stats-grid { grid-template-columns: repeat(2,1fr); }
+      .admin-two-col { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      .admin-sidebar { display: none; }
+      .admin-main    { margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Sidebar ───────────────────────────────────────────────── -->
+<aside class="admin-sidebar">
+  <div class="admin-logo">
+    Flavora
+    <span>Admin Panel</span>
+  </div>
+
+  <nav class="admin-nav">
+    <div class="admin-nav-item active" onclick="showSection('overview')" id="nav-overview">
+      <span class="nav-icon">📊</span> Overview
+    </div>
+    <div class="admin-nav-item" onclick="showSection('users')" id="nav-users">
+      <span class="nav-icon">👥</span> Users
+    </div>
+    <div class="admin-nav-item" onclick="showSection('recipes')" id="nav-recipes">
+      <span class="nav-icon">🍽️</span> Recipes
+    </div>
+    <div class="admin-nav-item" onclick="showSection('activity')" id="nav-activity">
+      <span class="nav-icon">💬</span> Activity
+    </div>
+    <div class="admin-nav-item" onclick="location.href='index.html'" id="nav-site">
+      <span class="nav-icon">🌐</span> View Site
+    </div>
+    <div class="admin-nav-item" onclick="doLogout()" style="margin-top:auto">
+      <span class="nav-icon">🚪</span> Sign Out
+    </div>
+  </nav>
+
+  <div class="admin-bottom">
+    <div class="admin-user">
+      <div class="admin-user-avatar" id="admin-avatar">A</div>
+      <div>
+        <div class="admin-user-name" id="admin-name">Admin</div>
+        <div class="admin-user-role">Administrator</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ── Main Area ─────────────────────────────────────────────── -->
+<main class="admin-main">
+  <div class="admin-topbar">
+    <h1 id="topbar-title">Platform Overview</h1>
+    <div class="admin-topbar-actions">
+      <span class="admin-badge badge-live">● LIVE</span>
+      <button class="admin-action-btn" onclick="refreshStats()">↻ Refresh</button>
+    </div>
+  </div>
+
+  <div class="admin-content">
+
+    <!-- ── Overview Section ────────────────────────────────── -->
+    <div id="section-overview">
+
+      <!-- Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-card green">
+          <div class="stat-icon">👥</div>
+          <div class="stat-val" id="stat-users">5</div>
+          <div class="stat-label">Total Users</div>
+          <div class="stat-change up">↑ +2 this week</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-icon">🍽️</div>
+          <div class="stat-val" id="stat-recipes">12</div>
+          <div class="stat-label">Total Recipes</div>
+          <div class="stat-change up">↑ +3 this week</div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-icon">❤️</div>
+          <div class="stat-val" id="stat-likes">847</div>
+          <div class="stat-label">Total Likes</div>
+          <div class="stat-change up">↑ +124 this week</div>
+        </div>
+        <div class="stat-card orange">
+          <div class="stat-icon">💬</div>
+          <div class="stat-val" id="stat-comments">241</div>
+          <div class="stat-label">Total Comments</div>
+          <div class="stat-change up">↑ +38 this week</div>
+        </div>
+      </div>
+
+      <div class="admin-two-col">
+
+        <!-- Top Recipes by Likes -->
+        <div>
+          <div class="admin-section-header">
+            <div class="admin-section-title">Top Recipes by Likes</div>
+          </div>
+          <div class="admin-table-wrap">
+            <div class="bar-chart" id="likes-chart">
+              <div class="bar-row"><div class="bar-label">Wood-Fired Pizza</div><div class="bar-track"><div class="bar-fill" style="width:85%"></div></div><div class="bar-count">215</div></div>
+              <div class="bar-row"><div class="bar-label">Braised Short Ribs</div><div class="bar-track"><div class="bar-fill" style="width:68%"></div></div><div class="bar-count">172</div></div>
+              <div class="bar-row"><div class="bar-label">Spring Risotto</div><div class="bar-track"><div class="bar-fill" style="width:55%"></div></div><div class="bar-count">142</div></div>
+              <div class="bar-row"><div class="bar-label">Pesto Genovese</div><div class="bar-track"><div class="bar-fill" style="width:39%"></div></div><div class="bar-count">98</div></div>
+              <div class="bar-row"><div class="bar-label">Tomato Burrata</div><div class="bar-track"><div class="bar-fill" style="width:30%"></div></div><div class="bar-count">77</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Comments -->
+        <div>
+          <div class="admin-section-header">
+            <div class="admin-section-title">Recent Comments</div>
+          </div>
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr><th>User</th><th>Comment</th><th>Recipe</th></tr>
+              </thead>
+              <tbody id="comments-table">
+                <tr>
+                  <td><div class="user-cell"><div class="user-mini-avatar">S</div><span>Sameer</span></div></td>
+                  <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">The saffron tip is golden!</td>
+                  <td>Braised Ribs</td>
+                </tr>
+                <tr>
+                  <td><div class="user-cell"><div class="user-mini-avatar">M</div><span>Marcus T.</span></div></td>
+                  <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Adding this to my class 🔥</td>
+                  <td>Cocoa Ganache</td>
+                </tr>
+                <tr>
+                  <td><div class="user-cell"><div class="user-mini-avatar">E</div><span>Elena R.</span></div></td>
+                  <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">What sea salt brand?</td>
+                  <td>Tomato Burrata</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Additional stats row -->
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+        <div class="stat-card">
+          <div class="stat-icon">🔖</div>
+          <div class="stat-val" id="stat-bookmarks">356</div>
+          <div class="stat-label">Bookmarks</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">👣</div>
+          <div class="stat-val" id="stat-follows">128</div>
+          <div class="stat-label">Follows</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🌟</div>
+          <div class="stat-val">4</div>
+          <div class="stat-label">Tastemakers</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Users Section ────────────────────────────────────── -->
+    <div id="section-users" style="display:none">
+      <div class="admin-section-header">
+        <div class="admin-section-title">All Users (<span id="user-count">5</span>)</div>
+        <button class="admin-action-btn" onclick="location.href='login.html'">+ Invite User</button>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr><th>User</th><th>Role</th><th>Recipes</th><th>Followers</th><th>Joined</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="users-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── Recipes Section ──────────────────────────────────── -->
+    <div id="section-recipes" style="display:none">
+      <div class="admin-section-header">
+        <div class="admin-section-title">All Recipes (<span id="recipe-count-label">12</span>)</div>
+        <button class="admin-action-btn" onclick="location.href='upload.html'">+ New Recipe</button>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr><th>Recipe</th><th>Author</th><th>Likes</th><th>Comments</th><th>Difficulty</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="recipes-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── Activity Section ─────────────────────────────────── -->
+    <div id="section-activity" style="display:none">
+      <div class="admin-section-header">
+        <div class="admin-section-title">Recent Activity</div>
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr><th>Time</th><th>User</th><th>Action</th><th>Details</th></tr>
+          </thead>
+          <tbody id="activity-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /admin-content -->
+</main>
+
+<script>
+const API = 'http://127.0.0.1:5000/api';
+
+// Check admin auth
+const user = JSON.parse(localStorage.getItem('ek_user') || 'null');
+if (user) {
+  document.getElementById('admin-name').textContent = user.name;
+  document.getElementById('admin-avatar').textContent = (user.name||'A')[0].toUpperCase();
+}
+
+function doLogout() {
+  localStorage.removeItem('ek_user');
+  location.href = 'login.html';
+}
+
+// ── Navigation ─────────────────────────────────────────────
+const SECTIONS = ['overview','users','recipes','activity'];
+function showSection(name) {
+  SECTIONS.forEach(s => {
+    document.getElementById(`section-${s}`).style.display = s === name ? 'block' : 'none';
+    document.getElementById(`nav-${s}`)?.classList.toggle('active', s === name);
+  });
+  const titles = {
+    overview: 'Platform Overview',
+    users:    'User Management',
+    recipes:  'Recipe Management',
+    activity: 'Recent Activity'
+  };
+  document.getElementById('topbar-title').textContent = titles[name] || 'Admin';
+  if (name === 'users')    loadUsers();
+  if (name === 'recipes')  loadRecipes();
+  if (name === 'activity') loadActivity();
+}
+
+// ── Load Overview Stats from MySQL ─────────────────────────
+async function loadStats() {
+  try {
+    const data = await fetch(`${API}/admin/stats`, { credentials:'include' }).then(r => r.json());
+    const s = data.stats || {};
+
+    document.getElementById('stat-users').textContent     = s.users     ?? '—';
+    document.getElementById('stat-recipes').textContent   = s.recipes   ?? '—';
+    document.getElementById('stat-likes').textContent     = s.likes     ?? '—';
+    document.getElementById('stat-comments').textContent  = s.comments  ?? '—';
+    document.getElementById('stat-bookmarks').textContent = s.bookmarks ?? '—';
+    document.getElementById('stat-follows').textContent   = s.follows   ?? '—';
+
+    // Top Recipes chart
+    const chart = document.getElementById('likes-chart');
+    if (chart && data.top_recipes?.length) {
+      const max = Math.max(...data.top_recipes.map(r => r.like_count)) || 1;
+      chart.innerHTML = data.top_recipes.map(r => {
+        const pct = Math.round((r.like_count / max) * 100);
+        const short = r.title.length > 18 ? r.title.slice(0,18) + '…' : r.title;
+        return `
+          <div class="bar-row">
+            <div class="bar-label" title="${r.title}">${short}</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+            <div class="bar-count">${r.like_count}</div>
+          </div>`;
+      }).join('');
+    }
+
+    // Recent Comments
+    const tbody = document.getElementById('comments-table');
+    if (tbody && data.recent_comments?.length) {
+      tbody.innerHTML = data.recent_comments.slice(0,5).map(c => `
+        <tr>
+          <td><div class="user-cell">
+            <div class="user-mini-avatar">${(c.user||'?')[0].toUpperCase()}</div>
+            <span>${c.user||'—'}</span>
+          </div></td>
+          <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.comment||''}</td>
+          <td style="color:rgba(255,255,255,0.5);max-width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.recipe||''}</td>
+        </tr>`).join('');
+    }
+
+  } catch(err) {
+    console.warn('Stats API error:', err);
+    showToastAdm('Backend offline — showing demo values', 'warning');
+  }
+}
+
+// ── Load Users from MySQL ──────────────────────────────────
+async function loadUsers() {
+  const tbody = document.getElementById('users-table');
+  tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:2rem;opacity:0.4">Loading…</td></tr>`;
+  try {
+    const users = await fetch(`${API}/users`, { credentials:'include' }).then(r => r.json());
+    document.getElementById('user-count').textContent = users.length;
+    tbody.innerHTML = users.map(u => {
+      const joinedDate = u.created_at ? new Date(u.created_at).toLocaleDateString('en-GB',{month:'short',year:'numeric'}) : '—';
+      return `
+        <tr>
+          <td><div class="user-cell">
+            <div class="user-mini-avatar">${(u.name||'?')[0].toUpperCase()}</div>
+            <div>
+              <div class="user-name-cell">${u.name||'—'}</div>
+              <div class="user-email-cell">${u.email||''}</div>
+            </div>
+          </div></td>
+          <td><span class="role-badge role-${u.role||'user'}">${u.role||'user'}</span></td>
+          <td>${(u.recipes||0).toLocaleString()}</td>
+          <td>${(u.followers||0).toLocaleString()}</td>
+          <td>${joinedDate}</td>
+          <td style="white-space:nowrap">
+            <button class="admin-action-btn" onclick="location.href='profile.html?id=${u.id}'">View</button>
+            <button class="admin-action-btn danger" onclick="confirmDelete('user',${u.id},'${u.name}')">Delete</button>
+          </td>
+        </tr>`;
+    }).join('');
+  } catch(err) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:2rem;color:#E07070">Failed to load users — is the backend running?</td></tr>`;
+  }
+}
+
+// ── Load Recipes from MySQL ────────────────────────────────
+async function loadRecipes() {
+  const tbody = document.getElementById('recipes-table');
+  tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:2rem;opacity:0.4">Loading…</td></tr>`;
+  const EMOJIS = {pizza:'🍕', risotto:'🌿', bowl:'🥗', pesto:'🍝', ribs:'🍖', tomato:'🍅', carrots:'🥕'};
+  const getEmoji = t => {
+    const l = t.toLowerCase();
+    if (l.includes('pizza')) return '🍕';
+    if (l.includes('risotto')) return '🌿';
+    if (l.includes('bowl')) return '🥗';
+    if (l.includes('pesto')) return '🍝';
+    if (l.includes('rib')) return '🍖';
+    if (l.includes('tomato')) return '🍅';
+    if (l.includes('carrot')) return '🥕';
+    return '🍽️';
+  };
+  try {
+    const recipes = await fetch(`${API}/recipes?limit=50`, { credentials:'include' }).then(r => r.json());
+    document.getElementById('recipe-count-label').textContent = recipes.length;
+    tbody.innerHTML = recipes.map(r => `
+      <tr>
+        <td><div class="user-cell">
+          <div class="recipe-img-mini">${getEmoji(r.title||'')}</div>
+          <span style="font-weight:500;color:var(--cream);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.title||'—'}</span>
+        </div></td>
+        <td>${r.author_name||'—'}</td>
+        <td>❤️ ${r.like_count||0}</td>
+        <td>💬 ${r.comment_count||0}</td>
+        <td>${r.difficulty||'—'}</td>
+        <td style="white-space:nowrap">
+          <button class="admin-action-btn" onclick="location.href='recipe.html?id=${r.id}'">View</button>
+          <button class="admin-action-btn danger" onclick="confirmDelete('recipe',${r.id},'${(r.title||'').replace(/'/g,"\\'")}')">Delete</button>
+        </td>
+      </tr>`).join('');
+  } catch(err) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:2rem;color:#E07070">Failed to load recipes.</td></tr>`;
+  }
+}
+
+// ── Load Activity (recent comments) from MySQL ────────────
+async function loadActivity() {
+  const tbody = document.getElementById('activity-table');
+  tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:2rem;opacity:0.4">Loading…</td></tr>`;
+  try {
+    const data = await fetch(`${API}/admin/stats`, { credentials:'include' }).then(r => r.json());
+    const comments = data.recent_comments || [];
+    tbody.innerHTML = comments.map(c => {
+      const ts = c.created_at ? new Date(c.created_at).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '—';
+      return `
+        <tr>
+          <td style="white-space:nowrap;color:rgba(255,255,255,0.35);font-size:0.78rem">${ts}</td>
+          <td><div class="user-cell">
+            <div class="user-mini-avatar">${(c.user||'?')[0].toUpperCase()}</div>
+            <span>${c.user||'—'}</span>
+          </div></td>
+          <td>💬 Commented</td>
+          <td style="color:rgba(255,255,255,0.5);max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
+              title="${c.comment||''}">${c.recipe||'—'} — "${(c.comment||'').slice(0,50)}…"</td>
+        </tr>`;
+    }).join('') || `<tr><td colspan="4" style="text-align:center;padding:2rem;opacity:0.4">No activity yet.</td></tr>`;
+  } catch(err) {
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:2rem;color:#E07070">Failed to load activity.</td></tr>`;
+  }
+}
+
+// ── Delete with confirm + API ──────────────────────────────
+async function confirmDelete(type, id, name) {
+  if (!confirm(`Delete ${type} "${name}"?\n\nThis cannot be undone.`)) return;
+  try {
+    const ep = type === 'user' ? `${API}/users/${id}` : `${API}/recipes/${id}`;
+    const res = await fetch(ep, { method:'DELETE', credentials:'include' });
+    if (res.ok) {
+      showToastAdm(`${type === 'user' ? 'User' : 'Recipe'} deleted ✓`, 'success');
+      if (type === 'user')   { loadUsers(); loadStats(); }
+      if (type === 'recipe') { loadRecipes(); loadStats(); }
+    } else {
+      showToastAdm('Delete failed — check backend', 'error');
+    }
+  } catch(err) {
+    showToastAdm('API offline — cannot delete', 'error');
+  }
+}
+
+// ── Mini toast for admin ───────────────────────────────────
+function showToastAdm(msg, type='info') {
+  const colors = { info:'#2D5016', success:'#3A7020', error:'#6A1010', warning:'#5A4010' };
+  let wrap = document.getElementById('adm-toast-wrap');
+  if (!wrap) { wrap=document.createElement('div'); wrap.id='adm-toast-wrap'; wrap.style.cssText='position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px'; document.body.appendChild(wrap); }
+  const t = document.createElement('div');
+  t.style.cssText=`background:${colors[type]};color:#fff;padding:10px 16px;border-radius:8px;font-size:0.82rem;font-weight:500;box-shadow:0 4px 12px rgba(0,0,0,0.4)`;
+  t.textContent = msg; wrap.appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity 0.3s';setTimeout(()=>t.remove(),300)}, 3000);
+}
+
+async function refreshStats() {
+  showToastAdm('Refreshing live data…', 'info');
+  await loadStats();
+  showToastAdm('Data refreshed ✓', 'success');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadStats();
+  showSection('overview');
+});
+</script>
+</body>
+</html>

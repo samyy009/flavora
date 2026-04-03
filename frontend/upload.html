@@ -1,0 +1,388 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+    /* Flavora Auth Guard — redirect to login if not signed in */
+    (function() {
+      try {
+        var u = JSON.parse(localStorage.getItem('ek_user') || 'null');
+        if (!u) { localStorage.setItem('ek_return_to', location.pathname + location.search); location.replace('login.html'); }
+      } catch(e) { location.replace('login.html'); }
+    })();
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Share Your Story — Flavora</title>
+  <meta name="description" content="Upload your recipe and share your culinary story with our community." />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .upload-layout {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 2.5rem;
+      padding: 2.5rem 0 4rem;
+      align-items: start;
+    }
+
+    /* ── Wizard Nav ── */
+    .wizard-nav { position: sticky; top: 80px; }
+    .wizard-nav-title { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 1rem; }
+    .wizard-nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 14px; border-radius: var(--radius-sm);
+      font-size: 0.88rem; font-weight: 500; color: var(--text-muted);
+      cursor: pointer; transition: all var(--transition); border: 1.5px solid transparent;
+      margin-bottom: 4px;
+    }
+    .wizard-nav-item.active   { background: var(--green); color: var(--white); border-color: var(--green); }
+    .wizard-nav-item.done     { background: var(--green-pale); color: var(--green); border-color: var(--green-pale); }
+    .wizard-nav-item .step-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+    .wizard-tips {
+      margin-top: 1.5rem; padding: 1rem; border-radius: var(--radius-sm);
+      background: #FEFAE8; border: 1px solid #E8DCA0; font-size: 0.8rem;
+    }
+    .wizard-tips h4 { font-size: 0.8rem; font-weight: 700; margin-bottom: 8px; color: #7A6A00; }
+    .wizard-tips li { margin-bottom: 6px; color: #5A5000; line-height: 1.4; }
+
+    /* ── Step Content ── */
+    .wizard-step-content { display: none; animation: fadeIn 0.25s ease; }
+    .wizard-step-content.active { display: block; }
+    .step-panel {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 2rem 2.5rem;
+    }
+    .step-panel-header { margin-bottom: 2rem; }
+    .step-label { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+    .step-panel-title  { font-size: 1.6rem; font-family: var(--font-serif); margin-bottom: 6px; }
+    .step-panel-desc   { font-size: 0.88rem; color: var(--text-muted); }
+
+    /* ── Ingredient / Step Rows ── */
+    .ingredient-row, .step-row {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 10px; animation: slideUp 0.2s ease;
+    }
+    .step-num-badge {
+      width: 36px; height: 36px; min-width: 36px; border-radius: 50%;
+      background: var(--green); color: var(--white);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-serif); font-size: 0.85rem; font-weight: 700;
+    }
+    .add-row-btn {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 20px; border-radius: var(--radius-sm);
+      border: 2px dashed var(--border); background: transparent;
+      color: var(--green); font-weight: 600; font-size: 0.85rem;
+      transition: all var(--transition); margin-top: 10px;
+    }
+    .add-row-btn:hover { background: var(--green-pale); border-color: var(--green); }
+
+    /* ── Tags ── */
+    .tags-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
+    .upload-tag { padding: 6px 16px; border-radius: 999px; border: 1.5px solid var(--border); background: transparent; font-size: 0.8rem; font-weight: 500; color: var(--charcoal-mid); cursor: pointer; transition: all var(--transition); }
+    .upload-tag.active { background: var(--green); border-color: var(--green); color: var(--white); }
+    .upload-tag:hover  { border-color: var(--green-mid); color: var(--green); }
+    .add-tag-btn { padding: 6px 16px; border-radius: 999px; border: 1.5px dashed var(--border); background: transparent; font-size: 0.8rem; color: var(--text-muted); cursor: pointer; }
+
+    /* ── Bottom Nav ── */
+    .wizard-bottom-nav {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border);
+    }
+
+    /* ── Photo Upload Grid ── */
+    .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .photo-slot {
+      aspect-ratio: 1; border-radius: var(--radius-sm);
+      border: 2px dashed var(--border); background: var(--cream-mid);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 8px; cursor: pointer; transition: all var(--transition);
+      font-size: 0.78rem; color: var(--text-muted);
+    }
+    .photo-slot:hover { border-color: var(--green); background: var(--green-pale); color: var(--green); }
+    .photo-slot .photo-icon { font-size: 1.8rem; }
+
+    /* ── Upcoming Sections ── */
+    .upcoming { margin-top: 2.5rem; }
+    .upcoming h3 { font-family: var(--font-serif); font-size: 1.1rem; margin-bottom: 1rem; color: var(--text-muted); }
+    .upcoming-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .upcoming-card {
+      background: var(--cream-mid); border: 1px solid var(--border);
+      border-radius: var(--radius-md); padding: 1.2rem;
+    }
+    .upcoming-card h4 { font-size: 0.9rem; margin-bottom: 4px; }
+    .upcoming-card p  { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; }
+
+    /* Cover image overlay */
+    .cover-change-overlay {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: rgba(0,0,0,0.5); padding: 10px;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-size: 0.82rem; font-weight: 500;
+    }
+    #cover-zone { position: relative; }
+
+    @media (max-width: 768px) {
+      .upload-layout { grid-template-columns: 1fr; }
+      .wizard-nav    { position: static; display: flex; gap: 4px; overflow-x: auto; }
+      .wizard-nav-title { display: none; }
+      .photo-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Navigation ─────────────────────────────────────────────── -->
+<nav class="nav">
+  <div class="nav-logo">Flavora</div>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="feed.html">Feed</a></li>
+    <li><a href="upload.html" class="active">Upload</a></li>
+    <li><a href="tastemakers.html">Tastemakers</a></li>
+  </ul>
+  <div class="nav-right" id="nav-right-placeholder">
+    <div class="nav-search">
+      <span class="icon">🔍</span>
+      <input type="search" placeholder="Find a story…" />
+    </div>
+    <div class="nav-avatar" onclick="location.href='profile.html'" title="My Profile">S</div>
+  </div>
+</nav>
+
+<main>
+  <div class="container">
+    <div style="padding-top:2rem">
+      <h1 style="font-family:var(--font-serif);font-size:2rem;margin-bottom:2rem">Share Your Story</h1>
+    </div>
+
+    <div class="upload-layout">
+
+      <!-- ── Wizard Nav ─────────────────────────────────────── -->
+      <nav class="wizard-nav" aria-label="Upload steps">
+        <div class="wizard-nav-title">Steps</div>
+        <div class="wizard-nav-item active" data-step="1" onclick="goToStep(1)">
+          <span class="step-dot"></span> Basics
+        </div>
+        <div class="wizard-nav-item" data-step="2" onclick="goToStep(2)">
+          <span class="step-dot"></span> Ingredients
+        </div>
+        <div class="wizard-nav-item" data-step="3" onclick="goToStep(3)">
+          <span class="step-dot"></span> Steps
+        </div>
+        <div class="wizard-nav-item" data-step="4" onclick="goToStep(4)">
+          <span class="step-dot"></span> Photos
+        </div>
+
+        <div class="wizard-tips">
+          <h4>✦ Editorial Tips</h4>
+          <ul style="padding-left:14px">
+            <li>Use descriptive adjectives like "blistered", "velvety", or "zesty" in your title.</li>
+            <li>List ingredients in the order they are used for better clarity.</li>
+            <li>Daylight is your best friend. Shoot your main photo near a window.</li>
+          </ul>
+        </div>
+      </nav>
+
+      <!-- ── Step Content ─────────────────────────────────────── -->
+      <div class="wizard-content-area">
+
+        <!-- STEP 1: Basics -->
+        <div class="wizard-step-content" id="step-1">
+          <div class="step-panel">
+            <div class="step-panel-header">
+              <div class="step-label">Step 1 of 4</div>
+              <h2 class="step-panel-title">Foundation of the Dish</h2>
+              <p class="step-panel-desc">Start with the soul of your recipe. Give it a name that sings and a story that invites others to the table.</p>
+            </div>
+
+            <!-- Cover Image -->
+            <div class="form-group">
+              <label class="form-label">Main Recipe Cover</label>
+              <div class="upload-zone" id="cover-zone">
+                <span class="upload-icon">📷</span>
+                <strong>Change Cover Image</strong>
+                <span style="font-size:0.78rem">High-res JPG or PNG (Max 8MB)</span>
+                <input type="file" id="cover-input" accept="image/*" style="display:none" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="recipe-title">Recipe Title</label>
+              <input class="form-input" id="recipe-title" placeholder="e.g. Heirloom Tomato & Burrata Tart with Herb Oil" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="recipe-story">The Story (Description)</label>
+              <textarea class="form-textarea" id="recipe-story" placeholder="How did this recipe come to be? Is it a family legacy or a weekend experiment?" style="min-height:110px"></textarea>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem">
+              <div class="form-group">
+                <label class="form-label" for="recipe-time">Total Time</label>
+                <input class="form-input" id="recipe-time" value="45 mins" placeholder="e.g. 45 mins" />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="recipe-difficulty">Difficulty Level</label>
+                <select class="form-select" id="recipe-difficulty">
+                  <option>Beginner</option>
+                  <option selected>Casual Cooking</option>
+                  <option>Intermediate</option>
+                  <option>Advanced</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="recipe-servings">Servings</label>
+                <input class="form-input" id="recipe-servings" type="number" value="4" min="1" max="50" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Culinary Tags</label>
+              <div class="tags-wrap">
+                <button class="upload-tag active" data-tag="Italian">Italian</button>
+                <button class="upload-tag" data-tag="Vegetarian">Vegetarian</button>
+                <button class="upload-tag" data-tag="Spring">Spring</button>
+                <button class="upload-tag" data-tag="Brunch">Brunch</button>
+                <button class="upload-tag" data-tag="Vegan">Vegan</button>
+                <button class="upload-tag" data-tag="Keto">Keto</button>
+                <button class="upload-tag" data-tag="Desserts">Desserts</button>
+                <button class="upload-tag" data-tag="Quick">Quick & Easy</button>
+                <button class="add-tag-btn">＋ Add Tag</button>
+              </div>
+            </div>
+
+            <div class="wizard-bottom-nav">
+              <button class="btn btn-outline" id="draft-btn">← Cancel Draft</button>
+              <div style="display:flex;gap:10px">
+                <button class="btn btn-outline" id="draft-btn-save" onclick="saveDraft()">Save as Draft</button>
+                <button class="btn btn-primary" id="next-btn" onclick="nextStep()">Next: Ingredients →</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Upcoming sections preview -->
+          <div class="upcoming">
+            <h3>Upcoming Sections</h3>
+            <div class="upcoming-grid">
+              <div class="upcoming-card">
+                <h4>🥦 Ingredients</h4>
+                <p>You'll be able to add amounts, units, and specific notes for each item in the next step.</p>
+              </div>
+              <div class="upcoming-card">
+                <h4>🍴 Instructions</h4>
+                <p>Break down your process into manageable bites. Add cooking tips for each milestone.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 2: Ingredients -->
+        <div class="wizard-step-content" id="step-2">
+          <div class="step-panel">
+            <div class="step-panel-header">
+              <div class="step-label">Step 2 of 4</div>
+              <h2 class="step-panel-title">The Pantry List</h2>
+              <p class="step-panel-desc">List each ingredient with its precise amount. Clarity transforms a good recipe into a great one.</p>
+            </div>
+            <div id="ingredients-list-upload"></div>
+            <button class="add-row-btn" onclick="addIngredient()">＋ Add Ingredient</button>
+            <div class="wizard-bottom-nav">
+              <button class="btn btn-outline" id="prev-btn" onclick="prevStep()">← Foundation</button>
+              <div style="display:flex;gap:10px">
+                <button class="btn btn-outline" onclick="saveDraft()">Save as Draft</button>
+                <button class="btn btn-primary" id="next-btn" onclick="nextStep()">Next: Steps →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 3: Steps -->
+        <div class="wizard-step-content" id="step-3">
+          <div class="step-panel">
+            <div class="step-panel-header">
+              <div class="step-label">Step 3 of 4</div>
+              <h2 class="step-panel-title">The Method</h2>
+              <p class="step-panel-desc">Walk your reader through the process. Each step should build anticipation for the next.</p>
+            </div>
+            <div id="steps-list-upload"></div>
+            <button class="add-row-btn" onclick="addStep()">＋ Add Step</button>
+            <div class="wizard-bottom-nav">
+              <button class="btn btn-outline" onclick="prevStep()">← Ingredients</button>
+              <div style="display:flex;gap:10px">
+                <button class="btn btn-outline" onclick="saveDraft()">Save as Draft</button>
+                <button class="btn btn-primary" onclick="nextStep()">Next: Photos →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 4: Photos -->
+        <div class="wizard-step-content" id="step-4">
+          <div class="step-panel">
+            <div class="step-panel-header">
+              <div class="step-label">Step 4 of 4</div>
+              <h2 class="step-panel-title">The Visual Story</h2>
+              <p class="step-panel-desc">A photograph is worth a thousand bites. Show the world what you've created.</p>
+            </div>
+            <div class="photo-grid" style="margin-bottom:1.5rem">
+              <div class="photo-slot">
+                <span class="photo-icon">📷</span>
+                <span>Main Shot</span>
+              </div>
+              <div class="photo-slot">
+                <span class="photo-icon">🍽️</span>
+                <span>Plated View</span>
+              </div>
+              <div class="photo-slot">
+                <span class="photo-icon">🔪</span>
+                <span>Prep Shot</span>
+              </div>
+              <div class="photo-slot">
+                <span class="photo-icon">📐</span>
+                <span>Detail Close-up</span>
+              </div>
+              <div class="photo-slot">
+                <span class="photo-icon">🌿</span>
+                <span>Garnish</span>
+              </div>
+              <div class="photo-slot">
+                <span class="photo-icon">➕</span>
+                <span>Add More</span>
+              </div>
+            </div>
+            <div class="wizard-bottom-nav">
+              <button class="btn btn-outline" onclick="prevStep()">← Steps</button>
+              <div style="display:flex;gap:10px">
+                <button class="btn btn-outline" onclick="saveDraft()">Save as Draft</button>
+                <button class="btn btn-primary" id="publish-btn" onclick="publishRecipe()">Publish Recipe 🎉</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /wizard-content-area -->
+    </div><!-- /upload-layout -->
+  </div>
+</main>
+
+<!-- ── Footer ────────────────────────────────────────────────── -->
+<footer class="footer">
+  <div class="container footer-inner">
+    <div>
+      <div class="footer-logo">Flavora</div>
+      <div class="footer-copy">© 2024 Flavora. Crafted for the Digital Epicurean.</div>
+    </div>
+    <ul class="footer-links">
+      <li><a href="#">About</a></li>
+      <li><a href="tastemakers.html">Community</a></li>
+      <li><a href="feed.html">Recipes</a></li>
+    </ul>
+  </div>
+</footer>
+
+<script src="js/app.js"></script>
+<script src="js/upload.js"></script>
+</body>
+</html>
+
+

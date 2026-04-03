@@ -1,0 +1,12 @@
+{
+  "name": "flavora-frontend",
+  "version": "1.0.0",
+  "description": "Flavora — Recipe Social Platform",
+  "scripts": {
+    "dev": "powershell -Command \"Get-NetTCPConnection -LocalPort 8080 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }\" & http-server . -p 8080 -o /login.html --cors -c-1",
+    "start": "http-server . -p 8080 --cors -c-1"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}
