@@ -171,7 +171,7 @@ async function loadFeedPosts() {
     if (q)    url = `/recipes?q=${encodeURIComponent(q)}`;
 
     const data = await apiFetch(url);
-    if (data && data.length) posts = data;
+    if (data && Array.isArray(data)) posts = data;
   } catch(_) {}
 
   if (!posts) posts = DEMO_POSTS;
@@ -192,8 +192,6 @@ async function loadFeedPosts() {
       ...post,
       author:   post.author_name  || post.author   || 'Chef',
       caption:  post.description  || post.caption  || '',
-      image_url: post.image_url   || post.image    || null,
-      image:     post.image_url   || post.image    || null,
       likes:     post.like_count  || post.likes    || 0,
       comments:  post.comments    || []
     };

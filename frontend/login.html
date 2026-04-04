@@ -175,7 +175,7 @@
         <li><div class="feat-icon">👨‍🍳</div> Follow your favourite Tastemakers</li>
       </ul>
     </div>
-    <div class="auth-brand-footer">© 2024 Flavora</div>
+    <div class="auth-brand-footer">© 2026 Flavora by Sam</div>
   </div>
 
   <!-- ── Right Form Panel ───────────────────────────────────── -->
@@ -227,13 +227,6 @@
               <div class="demo-role">Tastemaker · password: hashed_pw_1</div>
             </div>
             <button class="demo-fill-btn" onclick="fillDemo('clara@flavora.com','hashed_pw_1')">USE →</button>
-          </div>
-          <div class="demo-row">
-            <div>
-              <div style="font-weight:600">admin@flavora.com</div>
-              <div class="demo-role">Admin Panel · password: admin123</div>
-            </div>
-            <button class="demo-fill-btn" onclick="fillDemo('admin@flavora.com','admin123')">USE →</button>
           </div>
         </div>
       </div>
@@ -397,12 +390,12 @@ async function doLogin() {
 
   setTimeout(() => {
     if (user.role === 'admin') {
-      location.href = 'admin.html';
+      location.replace('admin.html');
     } else {
       // Return to page that triggered login, or home
       const returnTo = localStorage.getItem('ek_return_to');
       localStorage.removeItem('ek_return_to');
-      location.href = (returnTo && returnTo !== '/login.html') ? returnTo : 'index.html';
+      location.replace((returnTo && returnTo !== '/login.html') ? returnTo : 'index.html');
     }
   }, 700);
 }
@@ -437,7 +430,7 @@ async function doRegister() {
 
   localStorage.setItem('ek_user', JSON.stringify(user));
   btn.textContent = 'Account created! Redirecting…';
-  setTimeout(() => { location.href = 'index.html'; }, 800);
+  setTimeout(() => { location.replace('index.html'); }, 800);
 }
 
 async function requestOTP() {

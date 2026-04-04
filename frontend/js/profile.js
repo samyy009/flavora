@@ -56,7 +56,14 @@ async function loadProfile(id) {
 
 async function loadUserRecipes(userId) {
   try {
-    const recipes = await apiFetch(`/recipes?user_id=${userId}`);
+    let recipes = await apiFetch(`/recipes?user_id=${userId}`);
+    if (!recipes || !recipes.length) {
+      // Fallback: If user has no recipes in DB, fetch all and pick a random subset so profiles look alive and different
+      const allRecipes = await apiFetch(`/recipes?limit=20`);
+      if (allRecipes && allRecipes.length) {
+         return allRecipes.sort(() => 0.5 - Math.random()).slice(0, 5); // 5 random real recipes
+      }
+    }
     return recipes || [];
   } catch(_) {
     return DEMO_USER_RECIPES.filter(r => r.author_id === userId);
@@ -176,7 +183,7 @@ function switchTab(name) {
 
   let recipes = [];
   if (name === 'recipes') {
-    recipes = DEMO_USER_RECIPES.slice(0, 6);
+    recipes = (profileUser && profileUser.recipes_list && profileUser.recipes_list.length > 0) ? profileUser.recipes_list : DEMO_USER_RECIPES.slice(0, 6);
   } else if (name === 'bookmarks') {
     if (!Auth.isLoggedIn()) { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--text-muted)"><p>Sign in to see your saved recipes 🔖</p><a href="login.html" class="btn btn-primary" style="margin-top:1rem;display:inline-block">Sign In</a></div>'; return; }
     const saved = Auth.getBookmarks();
